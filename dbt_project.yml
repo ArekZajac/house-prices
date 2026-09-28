@@ -3,3 +3,8 @@ version: "1.0.0"
 profile: house_prices
 
 clean-targets: ["target", "dbt_packages"]
+
+models:
+  house_prices:
+    staging:
+      +materialized: view

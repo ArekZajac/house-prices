@@ -1,0 +1,45 @@
+models:
+  - name: stg_price_paid
+    description: One row per record in raw.price_paid, typed, with each code decoded next to the original. Keeps both PPD categories.
+    columns:
+      - name: transaction_id
+        description: Land Registry's id for the sale, braces removed.
+        data_tests:
+          - unique
+          - not_null
+      - name: price
+        data_tests:
+          - not_null
+      - name: date_of_transfer
+        data_tests:
+          - not_null
+      - name: property_type_code
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["D", "S", "T", "F", "O"]
+      - name: old_new_code
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["Y", "N"]
+      - name: duration_code
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["F", "L"]
+      - name: ppd_category_code
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["A", "B"]
+      - name: record_status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["A", "C", "D"]
