@@ -1,0 +1,10 @@
+sources:
+  - name: raw
+    description: Files loaded as they arrive, every column a string. Typing happens in staging.
+    database: workspace
+    schema: raw
+    tables:
+      - name: price_paid
+        description: HM Land Registry Price Paid Data, one row per record in the source file, plus source_file and loaded_at.
+      - name: nspl
+        description: ONS National Statistics Postcode Lookup, one row per postcode.
