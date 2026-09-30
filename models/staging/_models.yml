@@ -7,6 +7,15 @@ models:
         data_tests:
           - unique
           - not_null
+      - name: postcode
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_postcodes')
+                field: postcode
+              config:
+                warn_if: ">0"
+                error_if: ">1000"
       - name: price
         data_tests:
           - not_null
@@ -43,3 +52,28 @@ models:
           - accepted_values:
               arguments:
                 values: ["A", "C", "D"]
+  - name: stg_postcodes
+    description: One row per postcode in the NSPL, live and terminated, with stable column names and ONS pseudo codes turned into nulls.
+    columns:
+      - name: postcode
+        description: Single-space format, as Price Paid writes it.
+        data_tests:
+          - unique
+          - not_null
+      - name: postcode_district
+        data_tests:
+          - not_null
+      - name: introduced_on
+        data_tests:
+          - not_null
+      - name: country_code
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["E92000001", "W92000004", "S92000003", "N92000002", "L93000001", "M83000003"]
+      - name: region_code
+        description: English regions only. Null for Wales, which ONS gives a pseudo code.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["E12000001", "E12000002", "E12000003", "E12000004", "E12000005", "E12000006", "E12000007", "E12000008", "E12000009"]
