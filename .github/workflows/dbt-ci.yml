@@ -23,4 +23,5 @@ jobs:
           python-version: "3.13"
           cache: pip
       - run: pip install -r requirements.txt
-      - run: dbt build --target ci
+      - run: dbt run --select config.materialized:incremental --empty --target ci
+      - run: dbt build --full-refresh --target ci

@@ -1,0 +1,57 @@
+models:
+  - name: int_price_paid_current
+    description: One row per sale, holding the latest record Land Registry has sent for it. A monthly file's changes overwrite the sale they correct. Deleted sales stay as rows with is_deleted set, since dbt's merge on Databricks can insert and update but has no step that deletes a matched row. Everything downstream filters them out.
+    columns:
+      - name: transaction_id
+        data_tests:
+          - unique
+          - not_null
+      - name: is_deleted
+        description: True when the latest record for the sale is a delete (record status D).
+        data_tests:
+          - not_null
+
+unit_tests:
+  - name: int_price_paid_current_applies_a_monthly_file
+    description: A month's additions, changes and deletes reach the merge as the latest version of each sale, deletes flagged, and sales already merged are left alone.
+    model: int_price_paid_current
+    overrides:
+      macros:
+        is_incremental: true
+    given:
+      - input: this
+        rows:
+          - {transaction_id: "sale-1", price: 250000, record_status: "A", loaded_at: "2026-09-30 12:00:00"}
+          - {transaction_id: "sale-2", price: 180000, record_status: "A", loaded_at: "2026-09-30 12:00:00"}
+          - {transaction_id: "sale-4", price: 410000, record_status: "A", loaded_at: "2026-09-30 12:00:00"}
+      - input: ref('stg_price_paid')
+        rows:
+          - {transaction_id: "sale-1", price: 250000, record_status: "A", source_file: "pp-2024.csv", loaded_at: "2026-09-30 12:00:00"}
+          - {transaction_id: "sale-2", price: 180000, record_status: "A", source_file: "pp-2024.csv", loaded_at: "2026-09-30 12:00:00"}
+          - {transaction_id: "sale-4", price: 410000, record_status: "A", source_file: "pp-2024.csv", loaded_at: "2026-09-30 12:00:00"}
+          - {transaction_id: "sale-1", price: 265000, record_status: "C", source_file: "pp-monthly-2026-10.csv", loaded_at: "2026-10-28 09:00:00"}
+          - {transaction_id: "sale-2", price: 180000, record_status: "D", source_file: "pp-monthly-2026-10.csv", loaded_at: "2026-10-28 09:00:00"}
+          - {transaction_id: "sale-3", price: 320000, record_status: "A", source_file: "pp-monthly-2026-10.csv", loaded_at: "2026-10-28 09:00:00"}
+    expect:
+      rows:
+        - {transaction_id: "sale-1", price: 265000, record_status: "C", is_deleted: false}
+        - {transaction_id: "sale-2", price: 180000, record_status: "D", is_deleted: true}
+        - {transaction_id: "sale-3", price: 320000, record_status: "A", is_deleted: false}
+
+  - name: int_price_paid_current_rebuilds_to_the_latest_record
+    description: A full rebuild over every file loaded keeps one row per sale, its latest record, even when one sale has several.
+    model: int_price_paid_current
+    overrides:
+      macros:
+        is_incremental: false
+    given:
+      - input: ref('stg_price_paid')
+        rows:
+          - {transaction_id: "sale-1", price: 250000, record_status: "A", source_file: "pp-2024.csv", loaded_at: "2026-09-30 12:00:00"}
+          - {transaction_id: "sale-1", price: 265000, record_status: "C", source_file: "pp-monthly-2026-10.csv", loaded_at: "2026-10-28 09:00:00"}
+          - {transaction_id: "sale-1", price: 265000, record_status: "D", source_file: "pp-monthly-2026-11.csv", loaded_at: "2026-11-26 09:00:00"}
+          - {transaction_id: "sale-2", price: 180000, record_status: "A", source_file: "pp-2024.csv", loaded_at: "2026-09-30 12:00:00"}
+    expect:
+      rows:
+        - {transaction_id: "sale-1", price: 265000, record_status: "D", is_deleted: true}
+        - {transaction_id: "sale-2", price: 180000, record_status: "A", is_deleted: false}

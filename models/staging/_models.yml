@@ -3,9 +3,8 @@ models:
     description: One row per record in raw.price_paid, typed, with each code decoded next to the original. Keeps both PPD categories.
     columns:
       - name: transaction_id
-        description: Land Registry's id for the sale, braces removed.
+        description: Land Registry's id for the sale, braces removed. Not unique here, since a sale appears once in the complete history and again in each monthly file that changes it. int_price_paid_current is where it is unique.
         data_tests:
-          - unique
           - not_null
       - name: postcode
         description: Trimmed, since 821 sales from 2009 carry a trailing space. 1,141 sales in the September 2026 release have a postcode the August 2026 NSPL does not hold, so the test warns only above that and errors at a count only a broken join would reach.
