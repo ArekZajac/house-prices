@@ -1,0 +1,16 @@
+seeds:
+  - name: local_authorities
+    description: ONS local authority district names and codes as at April 2025, from the Documents folder of the August 2026 NSPL. Covers every code the NSPL gives a sale postcode.
+    columns:
+      - name: local_authority_code
+        data_tests:
+          - unique
+          - not_null
+
+  - name: regions
+    description: ONS names and codes for the nine English regions as at May 2025, from the same folder.
+    columns:
+      - name: region_code
+        data_tests:
+          - unique
+          - not_null

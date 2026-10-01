@@ -8,3 +8,5 @@ models:
   house_prices:
     staging:
       +materialized: view
+    marts:
+      +materialized: table

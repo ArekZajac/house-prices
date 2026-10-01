@@ -1,0 +1,68 @@
+models:
+  - name: fct_sales
+    description: One row per live sale, holding the latest version Land Registry has. Keeps both PPD categories; the analysis filters to category A through dim_property.
+    columns:
+      - name: transaction_id
+        data_tests:
+          - unique
+          - not_null
+      - name: date_of_transfer
+        data_tests:
+          - not_null
+          - not_in_future
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: calendar_date
+      - name: postcode
+        description: Null for sales Land Registry holds no postcode for, 50,792 in the September 2026 release.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_location')
+                field: postcode
+      - name: property_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_property')
+                field: property_key
+      - name: price
+        data_tests:
+          - not_null
+          - greater_than_zero
+
+  - name: dim_date
+    description: One row per day from 1995-01-01 to the end of the current year. The date table in Power BI.
+    columns:
+      - name: calendar_date
+        data_tests:
+          - unique
+          - not_null
+      - name: financial_year
+        description: UK financial year, April to March, such as 2024-25.
+
+  - name: dim_location
+    description: One row per postcode with a sale, with its local authority and region from the NSPL. 517 sale postcodes have no NSPL match, so their geography is null.
+    columns:
+      - name: postcode
+        data_tests:
+          - unique
+          - not_null
+      - name: region_name
+        description: The English region, or Wales or Scotland as a whole, since ONS gives neither of them regions.
+
+  - name: dim_property
+    description: Junk dimension of property type, new build, tenure and PPD category, one row per combination that occurs in the sales.
+    columns:
+      - name: property_key
+        description: The four codes run together, such as DNFA for a detached, established, freehold, standard sale.
+        data_tests:
+          - unique
+          - not_null
+      - name: dwelling_type
+        description: House, Flat or Other.
+
+  - name: mart_monthly_prices
+    description: Category A sales and median price by month, local authority and property type. Medians do not add up, so a region or a year needs the fact table, not a sum of these rows.
