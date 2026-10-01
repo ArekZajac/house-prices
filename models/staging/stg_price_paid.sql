@@ -10,7 +10,7 @@ typed as (
         trim(both '{}' from transaction_id) as transaction_id,
         cast(price as bigint) as price,
         to_date(date_of_transfer, 'yyyy-MM-dd HH:mm') as date_of_transfer,
-        nullif(postcode, '') as postcode,
+        nullif(trim(postcode), '') as postcode,
 
         property_type as property_type_code,
         case property_type
@@ -28,6 +28,7 @@ typed as (
         case duration
             when 'F' then 'Freehold'
             when 'L' then 'Leasehold'
+            when 'U' then 'Unknown'
         end as tenure,
 
         ppd_category_type as ppd_category_code,
@@ -36,13 +37,13 @@ typed as (
             when 'B' then 'Additional'
         end as ppd_category,
 
-        nullif(paon, '') as paon,
-        nullif(saon, '') as saon,
-        nullif(street, '') as street,
-        nullif(locality, '') as locality,
-        nullif(town_city, '') as town_city,
-        nullif(district, '') as district,
-        nullif(county, '') as county,
+        nullif(trim(paon), '') as paon,
+        nullif(trim(saon), '') as saon,
+        nullif(trim(street), '') as street,
+        nullif(trim(locality), '') as locality,
+        nullif(trim(town_city), '') as town_city,
+        nullif(trim(district), '') as district,
+        nullif(trim(county), '') as county,
 
         record_status,
         source_file,

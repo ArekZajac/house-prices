@@ -5,6 +5,11 @@ sources:
     schema: raw
     tables:
       - name: price_paid
-        description: HM Land Registry Price Paid Data, one row per record in the source file, plus source_file and loaded_at.
+        description: HM Land Registry Price Paid Data, one row per record in the source files, plus source_file and loaded_at. Holds the complete history as of one release, then each monthly update file appended after it.
+        config:
+          loaded_at_field: loaded_at
+          freshness:
+            warn_after: {count: 35, period: day}
+            error_after: {count: 45, period: day}
       - name: nspl
         description: ONS National Statistics Postcode Lookup, one row per postcode.
