@@ -1,0 +1,32 @@
+resources:
+  jobs:
+    monthly_load:
+      name: house_prices_monthly_load
+      max_concurrent_runs: 1
+
+      tasks:
+        - task_key: load_raw
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ../loading/load_monthly.sql
+
+        - task_key: dbt_build
+          depends_on:
+            - task_key: load_raw
+          environment_key: dbt
+          dbt_task:
+            project_directory: ../
+            warehouse_id: ${var.warehouse_id}
+            catalog: workspace
+            schema: house_prices
+            commands:
+              - dbt source freshness
+              - dbt build --exclude-resource-type unit_test
+
+      environments:
+        - environment_key: dbt
+          spec:
+            environment_version: "5"
+            dependencies:
+              - dbt-databricks==1.12.5
