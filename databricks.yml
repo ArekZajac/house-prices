@@ -1,0 +1,15 @@
+bundle:
+  name: house_prices
+
+include:
+  - resources/*.yml
+
+variables:
+  warehouse_id:
+    description: The workspace's SQL warehouse.
+    lookup:
+      warehouse: Serverless Starter Warehouse
+
+targets:
+  prod:
+    default: true

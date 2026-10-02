@@ -1,0 +1,39 @@
+name: Monthly load
+
+on:
+  schedule:
+    - cron: "0 6 3 * *"
+  workflow_dispatch:
+
+concurrency:
+  group: monthly-load
+  cancel-in-progress: false
+
+jobs:
+  load:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: databricks/setup-cli@v1.19.0
+
+      - name: Download the latest monthly update file
+        run: |
+          url=https://price-paid-data.publicdata.landregistry.gov.uk/pp-monthly-update-new-version.csv
+          released=$(curl -fsSI "$url" | awk -F': ' 'tolower($1) == "last-modified" {print $2}' | tr -d '\r')
+          file="pp-monthly-$(date -u -d "$released" +%Y-%m).csv"
+          curl -fsS -o "$file" "$url"
+          echo "Released $released, saved as $file with $(wc -l < "$file") rows"
+          echo "file=$file" >> "$GITHUB_ENV"
+
+      - name: Upload it to the volume
+        run: databricks fs cp "$file" "dbfs:/Volumes/workspace/raw/price_paid_files/monthly/$file" --overwrite
+
+      - name: Deploy the job
+        run: databricks bundle deploy
+
+      - name: Run the job
+        run: databricks bundle run monthly_load
